@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Forklift Daily Check – Laurinburg</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: single column work order, big gloved-thumb targets, sticky bottom action bar */
+:root{
+  --bg:#f3f2ee; --surface:#ffffff; --fg:#1d1f22; --muted:#5d6168; --line:#d9d7d0;
+  --accent:#f2b705; --accent-ink:#1d1f22;
+  --ok:#1f7a3f; --ok-bg:#e3f2e8; --bad:#c22f1f; --bad-bg:#fbe6e2; --na:#56606b; --na-bg:#e8eaec;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#16181b; --surface:#202327; --fg:#ecebe6; --muted:#a3a7ad; --line:#363a40;
+  --accent:#f2b705; --accent-ink:#16181b;
+  --ok:#5fcf86; --ok-bg:#1c3326; --bad:#ff7a66; --bad-bg:#3a1f1b; --na:#b3bac2; --na-bg:#2c3137; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16181b; --surface:#202327; --fg:#ecebe6; --muted:#a3a7ad; --line:#363a40;
+  --accent:#f2b705; --accent-ink:#16181b;
+  --ok:#5fcf86; --ok-bg:#1c3326; --bad:#ff7a66; --bad-bg:#3a1f1b; --na:#b3bac2; --na-bg:#2c3137; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45}
+.wrap{max-width:640px;margin:0 auto;padding-inline:16px;padding-block:0 140px}
+header.top{background:var(--accent);color:var(--accent-ink);margin-inline:-16px;padding:18px 16px 16px;
+  background-image:repeating-linear-gradient(-45deg,transparent 0 14px,rgba(0,0,0,.08) 14px 28px)}
+header.top .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+header.top h1{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;margin:4px 0 2px;text-transform:uppercase;letter-spacing:.01em}
+header.top p{margin:0;font-size:14px;font-weight:500}
+section{margin-top:22px}
+h2{font-family:var(--display);font-weight:700;font-size:21px;text-transform:uppercase;letter-spacing:.03em;margin:0 0 8px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+h2 small{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
+.hint{color:var(--muted);font-size:14px;margin:-4px 0 10px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fields .full{grid-column:1/-1}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+input[type=text],input[type=number],textarea,select{font:inherit;font-size:17px;color:var(--fg);background:var(--surface);border:1.5px solid var(--line);border-radius:6px;padding:11px 12px;width:100%;min-width:0;text-transform:none;letter-spacing:0}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 0;min-height:46px;font:600 16px var(--body);border-radius:6px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.item{padding:12px 14px;border-top:1px solid var(--line);display:grid;gap:8px}
+.item:first-child{border-top:0}
+.item.state-bad{background:var(--bad-bg)}
+.item .q{font-weight:600;font-size:16px}
+.item .q .crit{font-family:var(--mono);font-size:11px;color:var(--bad);border:1px solid currentColor;border-radius:3px;padding:0 4px;margin-left:6px;vertical-align:2px;white-space:nowrap}
+.item .d{color:var(--muted);font-size:14px;margin-top:-6px}
+.opts{display:grid;grid-template-columns:1fr 1fr 64px;gap:6px}
+.opts button{min-height:48px;border-radius:6px;border:1.5px solid var(--line);background:transparent;color:var(--fg);font:700 15px var(--body);cursor:pointer;letter-spacing:.02em}
+.opts button.ok[aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:#fff}
+.opts button.bad[aria-pressed=true]{background:var(--bad);border-color:var(--bad);color:#fff}
+.opts button.na[aria-pressed=true]{background:var(--na-bg);border-color:var(--na);color:var(--na)}
+.item textarea{font-size:16px;min-height:62px;resize:vertical}
+.item.missing{box-shadow:inset 4px 0 0 var(--bad)}
+.alert{border-radius:8px;padding:14px;margin-top:18px;font-weight:600;border:2px solid var(--bad);background:var(--bad-bg);color:var(--fg)}
+.alert strong{font-family:var(--display);font-size:22px;text-transform:uppercase;display:block;color:var(--bad);letter-spacing:.03em}
+.err{color:var(--bad);font-weight:600;font-size:14px;margin-top:10px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));z-index:5}
+.bar .in{max-width:640px;margin:0 auto;display:flex;gap:12px;align-items:center}
+.prog{flex:1;min-width:0}
+.prog .n{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--line);border-radius:3px;margin-top:5px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.btn{min-height:50px;padding:0 20px;border-radius:6px;border:0;background:var(--accent);color:var(--accent-ink);font:800 19px var(--display);text-transform:uppercase;letter-spacing:.04em;cursor:pointer}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--fg)}
+.done{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;margin-top:22px}
+.done h2{margin-bottom:4px}
+.done .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.done .row .btn{flex:1 1 160px}
+.addr{font-family:var(--mono);font-size:14px;user-select:all;background:var(--bg);padding:2px 6px;border-radius:4px;word-break:break-all}
+pre.report{font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;word-break:break-word;background:var(--bg);border-radius:6px;padding:12px;margin:12px 0 0;max-height:320px;overflow:auto;user-select:all}
+.status{font-weight:600;font-size:14px;margin-top:10px;min-height:1.2em}
+@media (max-width:420px){.fields{grid-template-columns:1fr}.opts{grid-template-columns:1fr 1fr 56px}}
+.tmatch{font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);min-height:1em}
+.tmatch.ok{color:var(--ok)}.tmatch.warn{color:var(--bad)}
+.sync{border-radius:6px;padding:12px 14px;margin:0 0 14px;font-weight:600;background:var(--na-bg);color:var(--fg)}
+.sync.ok{background:var(--ok-bg);color:var(--ok)}.sync.wait{background:var(--na-bg);color:var(--fg)}.sync.bad{background:var(--bad-bg);color:var(--bad)}
+.sync small{display:block;font-weight:400;color:var(--muted);margin-top:3px}
+@media (prefers-reduced-motion:reduce){.meter i{transition:none}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Laurinburg · Pre-shift inspection · OSHA 1910.178(q)(7)</div>
+    <h1>Forklift Daily Check</h1>
+    <p id="today"></p>
+  </header>
+
+  <form id="form" novalidate>
+    <section>
+      <h2>Truck &amp; driver</h2>
+      <div class="fields">
+        <label class="f full">Driver name<input id="driver" type="text" autocomplete="name" placeholder="First and last name"></label>
+        <label class="f">Truck #<input id="truck" type="text" list="trucks" placeholder="e.g. FL-03" autocapitalize="characters" autocomplete="off"><span class="tmatch" id="tmatch" aria-live="polite"></span></label>
+        <label class="f">Hour meter<input id="hours" type="number" inputmode="decimal" step="0.1" placeholder="0000.0"><span class="tmatch" id="hmatch" aria-live="polite"></span></label>
+        <label class="f full">Shift
+          <div class="seg" id="shift">
+            <button type="button" data-v="1st">1st</button><button type="button" data-v="2nd">2nd</button><button type="button" data-v="3rd">3rd</button>
+          </div>
+        </label>
+        <label class="f full">Power type
+          <div class="seg" id="power">
+            <button type="button" data-v="lp">LP gas</button><button type="button" data-v="elec">Electric</button><button type="button" data-v="diesel">Diesel / Gas</button>
+          </div>
+        </label>
+      </div>
+      <datalist id="trucks"></datalist>
+    </section>
+
+    <section>
+      <h2>Visual check <small>key off</small></h2>
+      <p class="hint">Walk around the truck before starting it. Mark anything worn, damaged, leaking or missing as a defect.</p>
+      <div class="list" id="visual"></div>
+    </section>
+
+    <section id="powerSec">
+      <h2 id="powerTitle">Fuel / power</h2>
+      <div class="list" id="powerList"></div>
+    </section>
+
+    <section>
+      <h2>Operational check <small>key on</small></h2>
+      <p class="hint">Start the truck and test each function in a clear area.</p>
+      <div class="list" id="ops"></div>
+    </section>
+
+    <section>
+      <h2>Other comments</h2>
+      <textarea id="comments" rows="3" placeholder="Anything else maintenance should know (optional)"></textarea>
+    </section>
+
+    <div id="critAlert" class="alert" hidden><strong>Do not operate</strong>A safety-critical item failed. Tag this truck out of service, park it, remove the key and tell your supervisor now.</div>
+    <div id="formErr" class="err" hidden></div>
+  </form>
+
+  <div id="done" class="done" hidden>
+    <h2>Report ready</h2>
+    <div class="sync wait" id="sync" role="status">Sending to the maintenance log…</div>
+    <p style="margin:0">Your mail app should also open with a copy of the report. <b>Press Send in your mail app.</b> If it didn't open, copy the report and email it to <span class="addr" id="addr"></span></p>
+    <div class="row">
+      <button class="btn" type="button" id="reopen">Open email again</button>
+      <button class="btn ghost" type="button" id="copy">Copy report</button>
+    </div>
+    <div class="status" id="copyStatus" role="status"></div>
+    <pre class="report" id="report"></pre>
+    <div class="row"><button class="btn ghost" type="button" id="newCheck">Start a new check</button></div>
+  </div>
+</div>
+
+<div class="bar" id="bar">
+  <div class="in">
+    <div class="prog"><div class="n" id="progN">0 of 0 items checked</div><div class="meter"><i id="progBar"></i></div></div>
+    <button class="btn" type="button" id="submit">Send report</button>
+  </div>
+</div>
+
+<script>
+const EMAIL = "randy4wooten@gmail.com";
+// Fleet Maintenance Log connection. The driver code can only list trucks and submit checks.
+const FLEET_URL = "https://script.google.com/macros/s/AKfycbzBiEtXM1cyurFDDDL9UoMHShy_ihL2jr9f2ow4LKT7bceoWPRZoY6wHRndNubtByl1PQ/exec";
+const DRIVER_CODE = "drv-787y14yw6g";
+const VISUAL = [
+  ["leaks","Fluid leaks","Look under the truck: oil, hydraulic fluid, coolant, fuel",1],
+  ["tires","Tires & wheels","Chunks missing, flat spots, cuts, loose lug nuts",1],
+  ["forks","Forks","Cracks, bends, uneven tips, heel wear, locking pins in place",1],
+  ["mast","Mast, chains & rollers","Chains lubed and even, no kinks or broken links, rollers OK",1],
+  ["hoses","Hydraulic hoses & cylinders","No cracks, bulges, rubbing or wet spots",1],
+  ["guard","Overhead guard & load backrest","Secure, not bent or cracked",1],
+  ["seat","Seat & seat belt","Belt latches and retracts, seat locked",1],
+  ["plate","Data plate & decals","Capacity plate present and readable",0],
+  ["ext","Fire extinguisher","Present, charged, pin in place (if equipped)",0],
+  ["clean","Clean & clear","Floor and steps free of debris, no loose items",0],
+];
+const POWER = {
+  lp:{title:"LP gas",items:[
+    ["tank","LP tank secure","Bracket and strap tight, locating pin seated",1],
+    ["lphose","LP hose & fitting","No cracks, no hissing or gas smell, valve fully open",1],
+    ["tankok","Tank condition","No dents or rust, relief valve cap in place",1],
+    ["oil","Engine oil level","Between marks on dipstick",0],
+    ["coolant","Coolant level","Check overflow bottle cold",0],
+    ["hyd","Hydraulic fluid level","Forks lowered when checking",0],
+  ]},
+  elec:{title:"Battery",items:[
+    ["charge","Battery charge","Gauge shows enough charge for the shift",0],
+    ["cables","Cables & connector","No cracked insulation, burned or loose plug",1],
+    ["water","Water level","Plates covered; add water only after charging",0],
+    ["restraint","Battery restraint","Hold-downs / side gates in place",1],
+    ["hyd","Hydraulic fluid level","Forks lowered when checking",0],
+  ]},
+  diesel:{title:"Engine & fuel",items:[
+    ["fuel","Fuel level","Enough for the shift; cap secure",0],
+    ["oil","Engine oil level","Between marks on dipstick",0],
+    ["coolant","Coolant level","Check overflow bottle cold",0],
+    ["hyd","Hydraulic fluid level","Forks lowered when checking",0],
+    ["belts","Belts & air filter","No fraying; filter indicator OK",0],
+  ]},
+};
+const OPS = [
+  ["horn","Horn","Sounds clearly",1],
+  ["lights","Lights & strobe","Headlights, rear lights, warning strobe",0],
+  ["alarm","Backup alarm","Sounds in reverse",1],
+  ["steer","Steering","Smooth, no excess play or binding",1],
+  ["brake","Service brake","Stops smoothly, pedal firm",1],
+  ["park","Parking brake","Holds the truck on an incline",1],
+  ["accel","Accelerator & direction control","Forward and reverse work, returns to neutral",1],
+  ["lift","Lift & lower","Smooth, no drifting or jerking",1],
+  ["tilt","Tilt","Forward and back, holds position",1],
+  ["side","Side shift / attachment","Works both directions (if equipped)",0],
+  ["gauges","Gauges & warning lights","No warning lights after start",0],
+  ["noise","Unusual noise or vibration","None while driving or lifting",0],
+];
+
+let state = {driver:"",truck:"",hours:"",shift:"",power:"lp",answers:{},notes:{},comments:""};
+const store = {
+  get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+const $ = id => document.getElementById(id);
+let now = new Date();
+$("today").textContent = now.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+$("addr").textContent = EMAIL;
+
+function itemsFor(){ return [...VISUAL.map(i=>["v",i]), ...POWER[state.power].items.map(i=>["p",i]), ...OPS.map(i=>["o",i])].map(([g,i])=>({key:g+"_"+i[0],label:i[1],desc:i[2],crit:!!i[3],group:g})); }
+
+function renderList(el, group){
+  el.innerHTML = "";
+  itemsFor().filter(i=>i.group===group).forEach(it=>{
+    const a = state.answers[it.key];
+    const row = document.createElement("div");
+    row.className = "item" + (a==="bad"?" state-bad":"");
+    row.dataset.key = it.key;
+    const q = document.createElement("div"); q.className="q"; q.textContent = it.label;
+    if(it.crit){const c=document.createElement("span");c.className="crit";c.textContent="SAFETY";q.appendChild(c);}
+    const d = document.createElement("div"); d.className="d"; d.textContent = it.desc;
+    const opts = document.createElement("div"); opts.className="opts";
+    [["ok","OK"],["bad","Defect"],["na","N/A"]].forEach(([v,t])=>{
+      const b=document.createElement("button");b.type="button";b.className=v;b.textContent=t;
+      b.setAttribute("aria-pressed",a===v?"true":"false");
+      b.setAttribute("aria-label",it.label+": "+t);
+      b.onclick=()=>{state.answers[it.key]=v;save();renderAll();};
+      opts.appendChild(b);
+    });
+    row.append(q,d,opts);
+    if(a==="bad"){
+      const ta=document.createElement("textarea");ta.id="note_"+it.key;ta.placeholder="Describe the problem (required)";
+      ta.value=state.notes[it.key]||"";
+      ta.oninput=()=>{state.notes[it.key]=ta.value;save();};
+      row.appendChild(ta);
+    }
+    el.appendChild(row);
+  });
+}
+function setSeg(id,val){ $(id).querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===val?"true":"false")); }
+function renderAll(){
+  setSeg("shift",state.shift); setSeg("power",state.power);
+  $("powerTitle").textContent = POWER[state.power].title;
+  renderList($("visual"),"v"); renderList($("powerList"),"p"); renderList($("ops"),"o");
+  const items = itemsFor();
+  const n = items.filter(i=>state.answers[i.key]).length;
+  $("progN").textContent = n+" of "+items.length+" items checked";
+  $("progBar").style.width = (items.length? n/items.length*100:0)+"%";
+  $("critAlert").hidden = !items.some(i=>i.crit && state.answers[i.key]==="bad");
+}
+function save(){ store.set("flc_lb_draft",state); }
+
+// Restore
+const draft = store.get("flc_lb_draft");
+if(draft && draft.power) state = Object.assign(state,draft);
+const prof = store.get("flc_lb_profile")||{};
+if(!state.driver && prof.driver) state.driver = prof.driver;
+$("driver").value=state.driver; $("truck").value=state.truck; $("hours").value=state.hours; $("comments").value=state.comments;
+[["driver","driver"],["truck","truck"],["hours","hours"],["comments","comments"]].forEach(([id,k])=>$(id).addEventListener("input",e=>{state[k]=e.target.value;save();}));
+$("shift").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;state.shift=b.dataset.v;save();renderAll();});
+$("power").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;state.power=b.dataset.v;save();renderAll();});
+if(!state.shift){const h=now.getHours();state.shift=h>=6&&h<14?"1st":h>=14&&h<22?"2nd":"3rd";}
+renderAll();
+
+/* ---------- Fleet Maintenance Log link ---------- */
+const normUnit = s => String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/([A-Z])0+(\d)/g,"$1$2");
+let fleet = store.get("flc_lb_fleet") || [];
+async function post(body){
+  const r = await fetch(FLEET_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(Object.assign({code:DRIVER_CODE},body))});
+  const j = await r.json(); if(!j.ok) throw new Error(j.error||"error"); return j;
+}
+function fillTrucks(){
+  const dl=$("trucks"); dl.innerHTML="";
+  const list = fleet.length ? fleet.filter(u=>u.type==="Forklift").concat(fleet.filter(u=>u.type!=="Forklift")).map(u=>u.unit) : (prof.trucks||[]);
+  list.forEach(t=>{const o=document.createElement("option");o.value=t;dl.appendChild(o);});
+}
+function matchTruck(){ const n=normUnit(state.truck); return n ? fleet.find(u=>normUnit(u.unit)===n) : null; }
+function truckHint(){
+  const t=$("tmatch"), hm=$("hmatch"), u=matchTruck(), v=state.truck.trim();
+  t.className="tmatch"; hm.className="tmatch"; hm.textContent="";
+  if(!v){ t.textContent=""; return; }
+  if(u){ t.className="tmatch ok"; t.textContent="✓ "+(u.name||u.type||u.unit);
+    const last=Number(u.meter)||0, h=Number(state.hours)||0;
+    if(last){ if(h && h<last){ hm.className="tmatch warn"; hm.textContent="Lower than last reading ("+last.toLocaleString()+"). Check the meter."; }
+      else hm.textContent="Last: "+last.toLocaleString(); }
+  } else if(fleet.length){ t.className="tmatch warn"; t.textContent="Not in the fleet list. Pick a truck from the list."; }
+  else t.textContent="";
+}
+async function loadFleet(){
+  try{ const j=await post({action:"units"}); fleet=j.units||[]; store.set("flc_lb_fleet",fleet); fillTrucks(); truckHint(); }catch(e){}
+}
+$("truck").addEventListener("input",truckHint); $("hours").addEventListener("input",truckHint);
+$("truck").addEventListener("change",()=>{const u=matchTruck(); if(u&&state.truck!==u.unit){state.truck=u.unit;$("truck").value=u.unit;save();truckHint();}});
+fillTrucks(); truckHint(); loadFleet();
+
+// Outbox: checks are kept on the phone until the maintenance log confirms it got them.
+function outbox(){ return store.get("flc_lb_outbox")||[]; }
+function setSync(cls,html){ const el=$("sync"); el.className="sync "+cls; el.innerHTML=html; }
+let flushing=false, showing=null;
+async function flush(showFor){
+  if(flushing) return; flushing=true;
+  showFor = showFor || showing;
+  try{
+    let box=outbox();
+    for(const item of box.slice()){
+      try{
+        const r=await post({action:"checklist",check:item});
+        box=outbox().filter(x=>x.id!==item.id); store.set("flc_lb_outbox",box);
+        if(showFor===item.id){
+          const parts=[];
+          if(r.created) parts.push(r.created+" work order"+(r.created>1?"s":"")+" opened");
+          if(r.updated) parts.push(r.updated+" added to an open work order");
+          if(r.down) parts.push(r.unit+" marked Down");
+          if(r.meterUpdated) parts.push("hours updated");
+          setSync("ok","✓ Saved to the maintenance log"+(r.duplicate?"":"")+(parts.length?"<small>"+parts.join(" · ")+"</small>":"")
+            +(r.matched===false?"<small>Truck "+esc(r.unit)+" isn't in the fleet list, so maintenance will match it up.</small>":""));
+        }
+      }catch(e){
+        if(showFor===item.id){
+          if(String(e.message)==="unauthorized") setSync("bad","Couldn't save to the maintenance log<small>The checklist's driver code doesn't match. Tell your supervisor. Your email report still works.</small>");
+          else setSync("wait","Saved on this phone<small>No signal right now. It will send by itself next time this page is open with signal.</small>");
+        }
+        break;
+      }
+    }
+  } finally { flushing=false; }
+}
+const esc=v=>String(v).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+window.addEventListener("online",()=>flush());
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)flush();});
+setInterval(()=>{if(outbox().length)flush();},30000);
+flush();
+
+function buildReport(){
+  const items=itemsFor();
+  const bad=items.filter(i=>state.answers[i.key]==="bad");
+  const crit=bad.some(i=>i.crit);
+  const status = crit?"OUT OF SERVICE":bad.length?"DEFECTS NOTED":"PASS";
+  const dt = now.toLocaleString(undefined,{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});
+  const L=[];
+  L.push("FORKLIFT DAILY CHECK: "+status);
+  L.push("");
+  L.push("Truck:   "+state.truck.trim());
+  L.push("Driver:  "+state.driver.trim());
+  L.push("Date:    "+dt+" ("+state.shift+" shift)");
+  L.push("Hours:   "+(state.hours||"not entered"));
+  L.push("Power:   "+POWER[state.power].title);
+  L.push("");
+  if(bad.length){
+    L.push("DEFECTS ("+bad.length+")");
+    bad.forEach(i=>L.push((i.crit?"[SAFETY] ":"")+i.label+": "+(state.notes[i.key]||"").trim()));
+    L.push("");
+  }
+  const sec=[["v","VISUAL"],["p",POWER[state.power].title.toUpperCase()],["o","OPERATIONAL"]];
+  sec.forEach(([g,t])=>{
+    L.push(t);
+    items.filter(i=>i.group===g).forEach(i=>{const a=state.answers[i.key];L.push((a==="ok"?"OK ":a==="bad"?"XX ":"NA ")+" "+i.label);});
+    L.push("");
+  });
+  if(state.comments.trim()){L.push("COMMENTS");L.push(state.comments.trim());L.push("");}
+  return {text:L.join("\n"),subject:"Laurinburg forklift "+state.truck.trim()+" daily check: "+status+" ("+state.driver.trim()+", "+now.toLocaleDateString()+")"};
+}
+let last=null;
+function openMail(){
+  if(!last) return;
+  const href="mailto:"+EMAIL+"?subject="+encodeURIComponent(last.subject)+"&body="+encodeURIComponent(last.text);
+  const a=document.createElement("a");a.href=href;a.rel="noopener";document.body.appendChild(a);a.click();a.remove();
+}
+$("submit").onclick=()=>{
+  document.querySelectorAll(".item.missing").forEach(e=>e.classList.remove("missing"));
+  const errs=[];
+  if(!state.driver.trim()) errs.push("driver name");
+  if(!state.truck.trim()) errs.push("truck number");
+  else if(fleet.length && !matchTruck()) errs.push("a truck number from the list");
+  const items=itemsFor();
+  const unanswered=items.filter(i=>!state.answers[i.key]);
+  const noNote=items.filter(i=>state.answers[i.key]==="bad" && !(state.notes[i.key]||"").trim());
+  if(unanswered.length) errs.push(unanswered.length+" unchecked item"+(unanswered.length>1?"s":""));
+  if(noNote.length) errs.push("a description for each defect");
+  [...unanswered,...noNote].forEach(i=>{const r=document.querySelector('.item[data-key="'+i.key+'"]');if(r)r.classList.add("missing");});
+  if(errs.length){
+    $("formErr").hidden=false;$("formErr").textContent="Still needed: "+errs.join(", ")+".";
+    const first = !state.driver.trim()?$("driver"):!state.truck.trim()?$("truck"):document.querySelector(".item.missing");
+    if(first) first.scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
+  $("formErr").hidden=true;
+  now=new Date();
+  last=buildReport();
+  const p=store.get("flc_lb_profile")||{};p.driver=state.driver.trim();
+  p.trucks=[state.truck.trim(),...(p.trucks||[]).filter(t=>t!==state.truck.trim())].slice(0,20);
+  store.set("flc_lb_profile",p);
+  $("report").textContent=last.text;
+  $("form").hidden=true;$("bar").hidden=true;$("done").hidden=false;
+  window.scrollTo(0,0);
+  const u=matchTruck();
+  const check={id:"k"+Date.now().toString(36)+Math.random().toString(36).slice(2,8),
+    date:now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0"),
+    at:new Date().toISOString(),unit:u?u.unit:state.truck.trim(),driver:state.driver.trim(),shift:state.shift,power:POWER[state.power].title,
+    hours:Number(state.hours)||null,comments:state.comments.trim(),
+    defects:itemsFor().filter(i=>state.answers[i.key]==="bad").map(i=>({key:i.key,label:i.label,crit:i.crit,note:(state.notes[i.key]||"").trim()}))};
+  store.set("flc_lb_outbox",outbox().concat([check]));
+  setSync("wait","Sending to the maintenance log…");
+  showing=check.id; flush(check.id);
+  openMail();
+};
+$("reopen").onclick=openMail;
+$("copy").onclick=()=>{
+  const txt="To: "+EMAIL+"\nSubject: "+last.subject+"\n\n"+last.text;
+  const ok=()=>{$("copyStatus").textContent="Copied. Paste it into an email or text.";};
+  const fail=()=>{const r=document.createRange();r.selectNodeContents($("report"));const s=getSelection();s.removeAllRanges();s.addRange(r);$("copyStatus").textContent="Report selected. Use your phone's Copy.";};
+  try{navigator.clipboard.writeText(txt).then(ok,fail);}catch(e){fail();}
+};
+$("newCheck").onclick=()=>{
+  const keep={driver:state.driver,power:state.power,shift:state.shift};
+  state={driver:keep.driver,truck:"",hours:"",shift:keep.shift,power:keep.power,answers:{},notes:{},comments:""};
+  store.del("flc_lb_draft"); showing=null;
+  $("truck").value="";$("hours").value="";$("comments").value="";$("copyStatus").textContent="";truckHint();
+  $("done").hidden=true;$("form").hidden=false;$("bar").hidden=false;renderAll();window.scrollTo(0,0);
+};
+</script>
+
+</body>
+</html>
